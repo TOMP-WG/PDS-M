@@ -1,0 +1,645 @@
+openapi: 3.0.0
+info:
+  title: Personal Data Store - Mobility API
+  description:
+    An API for exchanging personal data.
+    <p>The documentation can be found at <a href="https://github.com/TOMP-WG/PDS-M/">github</a>.
+  version: "0.1.0"
+  license:
+    name: Apache 2.0
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+
+# security. Allowed methods basic (in header: Authorization: Basic ZGVtbzpwQDU1dzByZA==),
+#                           bearer (in header: Authorization: Bearer <token>)
+#                           Api-key (in header: X-API-Key: abcdef12345)
+#                           OAuth2 and OpenId are also available
+# The exact ways to authenticate will be described in a later version
+security:
+  - BasicAuth: []
+  - BearerAuth: []
+  - ApiKeyAuth: []
+  - OAuth: []
+  - OpenId: []
+
+paths:
+  /routing/{personal-token}/query:
+    parameters:
+      - $ref: "#/components/parameters/acceptLanguage"
+      - $ref: "#/components/parameters/api"
+      - $ref: "#/components/parameters/apiVersion"
+      - $ref:  "#/components/parameters/organisationId"
+    post:
+      description:
+        returns requested personal data
+      parameters:
+        - name: personal-token
+          required: true
+          in: path
+          description: personal identification
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              maxItems: 100
+              items:
+                $ref: "#/components/schemas/planningQuestion"
+      responses:
+        "200":
+          description: results of the query (if allowed).
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/answer"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+
+  /booking/{personal-token}/query:
+    parameters:
+      - $ref: "#/components/parameters/acceptLanguage"
+      - $ref: "#/components/parameters/api"
+      - $ref: "#/components/parameters/apiVersion"
+      - $ref:  "#/components/parameters/organisationId"
+    post:
+      description:
+        returns requested personal data
+      parameters:
+        - name: personal-token
+          required: true
+          in: path
+          description: personal identification
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              maxItems: 100
+              items:
+                $ref: "#/components/schemas/bookingQuestion"
+      responses:
+        "200":
+          description: results of the query (if allowed).
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/answer"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+          
+  /support/{personal-token}/query:
+    parameters:
+      - $ref: "#/components/parameters/acceptLanguage"
+      - $ref: "#/components/parameters/api"
+      - $ref: "#/components/parameters/apiVersion"
+      - $ref:  "#/components/parameters/organisationId"
+    post:
+      description:
+        returns requested personal data
+      parameters:
+        - name: personal-token
+          required: true
+          in: path
+          description: personal identification
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              maxItems: 100
+              items:
+                $ref: "#/components/schemas/supportQuestion"
+      responses:
+        "200":
+          description: results of the query (if allowed).
+          content:
+            application/json:
+              schema:
+                type: array
+                maxItems: 100
+                items:
+                  $ref: "#/components/schemas/answer"
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+
+  /log/{personal-token}:
+    parameters:
+      - $ref: "#/components/parameters/acceptLanguage"
+      - $ref: "#/components/parameters/api"
+      - $ref: "#/components/parameters/apiVersion"
+      - $ref:  "#/components/parameters/organisationId"
+    post:
+      description:
+        logging journal entries
+      parameters:
+        - name: personal-token
+          required: true
+          in: path
+          description: personal identification
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              maxItems: 100
+              items:
+                $ref: "#/components/schemas/tripJournal"
+      responses:
+        "200":
+          description: logging correctly handled
+        "400":
+          $ref: "#/components/responses/400BadRequest"
+        "401":
+          $ref: "#/components/responses/401Unauthorized"
+        "403":
+          $ref: "#/components/responses/403Forbidden"
+
+components:
+  schemas:
+    answer:
+      type: object
+      additionalProperties: false
+      properties:
+        index:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+        answer:
+          additionalProperties: false
+          oneOf:
+           - type: boolean
+           - $ref: "#/components/schemas/data"
+           - $ref: "#/components/schemas/collection"
+           - $ref: "#/components/schemas/notexposed"
+        proof:
+          description: reference to e.g. a SSI
+          type: object
+
+    planningQuestion:
+      type: object
+      additionalProperties: false
+      required:
+        - index
+        - label
+        - operator
+      properties:
+        index:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+        label:
+          $ref: "#/components/schemas/planningLabel"
+        operator:
+          type: string
+          enum: [EQ, LE, LS, GE, GR, FOR, COUNT, VALUE]
+        value:
+          nullable: true
+          type: string
+
+    bookingQuestion:
+      type: object
+      additionalProperties: false
+      required:
+        - index
+        - label
+        - operator
+      properties:
+        index:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+        label:
+          $ref: "#/components/schemas/bookingLabel"
+        operator:
+          type: string
+          enum: [HAS, FOR, VALUE]
+        value:
+          nullable: true
+          type: string
+        required:
+          type: boolean
+    
+    supportQuestion:
+      type: object
+      additionalProperties: false
+      required:
+        - index
+        - label
+        - operator
+      properties:
+        index:
+          type: integer
+          format: int32
+          minimum: 0
+          maximum: 100
+        label:
+          $ref: "#/components/schemas/supportLabel"
+        operator:
+          type: string
+          enum: [VALUE]
+        value:
+          nullable: true
+          type: string
+        required:
+          type: boolean
+
+    planningLabel:
+      additionalProperties: false
+      anyOf:
+      - $ref: "#/components/schemas/personalPlanningLabel"
+      - $ref: "#/components/schemas/abilityDataLabel"
+      - $ref: "#/components/schemas/locationDataLabel"
+      - $ref: "#/components/schemas/cardsDataLabel"
+
+    bookingLabel:
+      additionalProperties: false
+      anyOf:
+      - $ref: "#/components/schemas/personalDataLabel"
+      - $ref: "#/components/schemas/contactDataLabel"
+      - $ref: "#/components/schemas/abilityDataLabel"
+      - $ref: "#/components/schemas/locationDataLabel"
+      - $ref: "#/components/schemas/cardsDataLabel"
+      - $ref: "#/components/schemas/paymentDataLabel"
+
+    supportLabel:
+      additionalProperties: false
+      anyOf:
+      - $ref: "#/components/schemas/personalDataLabel"
+      - $ref: "#/components/schemas/contactDataLabel"
+
+    personalPlanningLabel:
+      type: string
+      description: the operator on `GENDER` should always be 'VALUE' and the answer
+        must be 'MALE', 'FEMALE', 'X' or hidden.
+      enum: [AGE, GENDER, LENGTH, WEIGHT]
+
+    abilityDataLabel:
+      type: string
+      description: the operator on `ABILITIES` should always be 'VALUE'. The result
+        should always contain the list of abilities.
+      enum: [ABILITIES]
+
+    locationDataLabel:
+      type: string
+      description: the answers should report the location when using the operator `VALUE` in 
+        latitude/longitude (WGS84) OR in a UIC code. In case of using the operator `COUNT` it should report
+        the familiarity for this location (=number of usages in the last year).
+      enum: [HOME, WORK, LOCATION]
+
+    cardsDataLabel:
+      type: string
+      description: <b>\[planning\]</b> <ol><li>in case of license, the operator should be 'EQ' and the value
+        the modality. <li>In case of an ID_CARD, the value should contain 'PASSPORT', 
+        'DRIVER_LICENSE', 'ID' or 'OTHER'.
+        <li>In case of MEMBERSHIP the value should contain the name of the membership.
+        </ol>
+        <p>The result should always be a boolean or hidden.<br><br>
+        <b>\[booking\]</b> 
+        <p>It is allowed to use the operator 'FOR' to get the number of the
+        card.
+      enum: [DRIVER_LICENSE, ID_CARD, MEMBERSHIP]
+
+    locationBookingLabel:
+      type: string
+      enum: [HOME, WORK]
+
+    contactDataLabel:
+      type: string
+      enum: [PHONE_HOME, PHONE_MOBILE, EMAIL, EMAIL_WORK]
+
+    personalDataLabel:
+      type: string
+      enum: [FIRSTNAME, LASTNAME, AGE, BIRTHDATE, GENDER, LENGTH, WEIGHT]
+      
+    paymentDataLabel:
+      type: string
+      enum: [CREDIT_CARD, BANK_CARD, PAYPALL, INNOPAY]
+
+    amountOfMoney:
+      type: object
+      description: https://app.swaggerhub.com/apis-docs/TOMP-API-WG/transport-operator_maas_provider_api/1.1.0#/components/schemas/amountOfMoney
+      properties:
+        amount:
+          description: This should be in the base unit as defined by the ISO 4217 currency code with the appropriate number of decimal places and omitting the currency symbol. e.g. if the price is in US Dollars the price would be 9.95. This is inclusive VAT
+          type: number
+          example: 9.95
+        amountExVat:
+          type: number
+          example: 8.95
+        currencyCode:
+          description: ISO 4217 currency code
+          type: string
+          minLength: 3
+          maxLength: 3
+        vatRate:
+          type: number
+          description: value added tax rate (percentage of amount)
+          example: 21.0
+        vatCountryCode:
+          $ref: "#/components/schemas/country"
+    
+    country:
+      type: string
+      description: two-letter country codes according to ISO 3166-1
+        https://app.swaggerhub.com/apis-docs/TOMP-API-WG/transport-operator_maas_provider_api/1.1.0#/components/schemas/country
+      maxLength: 2
+      minLength: 2
+      example: NL
+
+    tripJournal:
+      allOf:
+        - $ref: "#/components/schemas/amountOfMoney"
+        - type: object
+          properties:
+            distance:
+              description: the travelled distance. Only if applicable.
+              type: number
+            distanceType:
+              type: string
+              enum: [KM, MILE]
+            usedTime:
+              description: the time in seconds that the assed is used. Only if applicable.
+              type: number
+            costs:
+              $ref: "#/components/schemas/amountOfMoney"
+            modality:
+              $ref: "#/components/schemas/assetClass"
+            locations:
+              type: array
+              items:
+                $ref: "#/components/schemas/place"
+    
+    assetClass:
+      type: string
+      description: These classes are taken from the NeTeX standard, but ALL and UNKNOWN are removed. On the other hand OTHER and PARKING are added.
+        https://app.swaggerhub.com/apis-docs/TOMP-API-WG/transport-operator_maas_provider_api/1.1.0#/components/schemas/assetClass
+      enum:
+        [
+          AIR,
+          BUS,
+          TROLLEYBUS,
+          TRAM,
+          COACH,
+          RAIL,
+          INTERCITYRAIL,
+          URBANRAIL,
+          METRO,
+          WATER,
+          CABLEWAY,
+          FUNICULAR,
+          TAXI,
+          SELFDRIVE,
+          FOOT,
+          BICYCLE,
+          MOTORCYCLE,
+          CAR,
+          SHUTTLE,
+          OTHER,
+          PARKING,
+          MOPED,
+          STEP,
+        ]
+
+    place:
+      type: object
+      description: a origin or destination of a leg, non 3D. lon/lat in WGS84.
+        https://app.swaggerhub.com/apis-docs/TOMP-API-WG/transport-operator_maas_provider_api/1.1.0#/components/schemas/place
+      required:
+        - coordinates
+      properties:
+        name:
+          description: Human readable name of the place, could match Content-Language
+          type: string
+        stopReference:
+          type: array
+          items:
+            $ref: "#/components/schemas/stopReference"
+        stationId:
+          description: reference to /operator/stations
+          type: string
+        coordinates:
+          $ref: "#/components/schemas/coordinates"
+        physicalAddress:
+          $ref: "#/components/schemas/address"
+        extraInfo:
+          type: object
+          additionalProperties: true
+
+    address:
+      type: object
+      description:
+        https://app.swaggerhub.com/apis-docs/TOMP-API-WG/transport-operator_maas_provider_api/1.1.0#/components/schemas/address
+      properties:
+        streetAddress:
+          description: street address, including number OR PO box number, eventually extended with internal referencce like room number, could match Content-Language
+          type: string
+          example: example street 18, 2nd floor, 18-B33
+        areaReference:
+          description: city or town, principal subdivision such as province, state or county, could match Content-Language
+          type: string
+          example: Smallcity, Pinetree county
+        postalCode:
+          type: string
+        country:
+          $ref: "#/components/schemas/country"
+    
+    stopReference:
+      type: object
+      description: reference to a stop (can be nation specific). This can help to specific pinpoint a (bus) stop. Extra information about the stop is not supplied; you should find it elsewhere.
+      required:
+        - type
+        - id
+        - country
+      properties:
+        type:
+          type: string
+          description: type of external reference (GTFS, CHB).
+          enum:
+            [
+              GTFS_STOP_ID,
+              GTFS_STOP_CODE,
+              GTFS_AREA_ID,
+              CHB_STOP_PLACE_CODE,
+              CHB_QUAY_CODE,
+              NS_CODE,
+            ]
+        id:
+          type: string
+          description: this field should contain the complete ID. E.g. NL:S:13121110 or BE:S:79640040
+        country:
+          $ref: "#/components/schemas/country"
+
+    coordinates:
+      type: object
+      description: a lon, lat (WGS84, EPSG:4326)
+        https://app.swaggerhub.com/apis-docs/TOMP-API-WG/transport-operator_maas_provider_api/1.1.0#/components/schemas/coordinates
+      required:
+        - lat
+        - lng
+      properties:
+        lng:
+          type: number
+          example: 6.169639
+        lat:
+          type: number
+          example: 52.253279
+
+    data:
+      type: object
+      properties:
+        value: 
+          type: string
+          
+    collection:
+      type: array
+      items:
+        type: object
+    
+    notexposed:
+      type: string
+      enum: ["hidden"]
+
+    error:
+      type: object
+      description:
+        An error that the service may send, e.g. in case of invalid input
+      properties:
+        errorcode:
+          type: number
+          description: An error code for this type of error
+        type:
+          type: string
+          description: The category of this type of error.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.  It SHOULD NOT change from occurrence to occurrence of the problem, except to match Content-Language
+        status:
+          type: integer
+          description: The HTTP status code ([RFC7231], Section 6) generated by the origin server for this occurrence of the problem.
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem, could match Content-Language
+        instance:
+          type: string
+          description: A URI reference that identifies the specific occurrence of the problem.  It may or may not yield further information if dereferenced.
+
+  parameters:
+    acceptLanguage:
+      in: header
+      name: Accept-Language
+      required: true
+      schema:
+        type: string
+        format: A comma-separated list of BCP 47 (RFC 5646) language tags and optional weights as described in IETF RFC7231 section 5.3.5
+      example: nl, de;q=0.7
+    api:
+      in: header
+      name: Api
+      required: true
+      schema:
+        type: string
+      description: API description
+      example: PDS-M
+    apiVersion:
+      in: header
+      name: Api-Version
+      required: true
+      schema:
+        type: string
+      description: Version of the API.
+      example: 0.1.0
+    organisationId:
+      in: header
+      name: organisation-id
+      required: true
+      schema:
+        type: string
+      description: The ID of the sending party
+      example: 1324A-DFB3482-32ACD
+
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+    BearerAuth:
+      type: http
+      scheme: bearer
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    OAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: /oauth/authorize
+          tokenUrl: /oauth/token
+          scopes: {}
+    OpenId:
+      type: openIdConnect
+      openIdConnectUrl: https://unknownserver/.well-known/openid-configuration
+
+  responses:
+    202Accepted:
+      description: Request was successfully accepted for processing but has not yet completed.
+      headers:
+        Location:
+          schema:
+            type: string
+          description: The URI where the created or updated resource will eventually be found.
+          example: "/bookings/1234"
+    204NoContent:
+      description: Request was successful, no content to return.
+    400BadRequest:
+      description: Bad request. See https://github.com/TOMP-WG/TOMP-API/wiki/Error-handling-in-TOMP for further explanation of error code.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    401Unauthorized:
+      description: Although the HTTP standard specifies "unauthorized", semantically this response means "unauthenticated". That is, the client must authenticate itself to get the requested response.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    403Forbidden:
+      description: The client does not have access rights to the content, i.e. they are unauthorized, so server is rejecting to give proper response. Unlike 401, the client's identity is known to the server.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/error"
+    404NotFound:
+      description: The requested resources does not exist or the requester is not authorized to see it or know it exists.
+    409Conflict:
+      description: The request will not be fulfilled. The request itself is legal, but the content conflicts with the server and might be stale. The user might try again after looking up the current state of the resource.
+
+    410Gone:
+      description: The requested resource is no longer available. This is permanent.
